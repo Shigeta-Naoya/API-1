@@ -1,6 +1,7 @@
 //定数宣言
 #define DEF_APP_NAME	TEXT("Waveform Test")
 #define DEF_MUTEX_NAME	DEF_APP_NAME			//ミューテックス名
+//ここを変える
 #define DEF_DATAPERS 10	//1秒間に何データ入出力するか
 
 //関数宣言
