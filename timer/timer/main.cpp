@@ -80,6 +80,12 @@ BOOL CALLBACK MainDlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			Sps[1].hwnd = hWnd[1];
 			hThread[0] = (HANDLE)_beginthreadex(NULL, 0, TFunc, (PVOID)&Sps[0], 0, &thID[0]);   //_beginthreadexでスレッドを立ち上げる	
 			hThread[1] = (HANDLE)_beginthreadex(NULL, 0, TFunc, (PVOID)&Sps[1], 0, &thID[1]);
+
+			//ここでデータを読み込んで描画をする用のスレッドを起動する
+			//Timerを参考に…
+
+
+
 			EnableWindow(GetDlgItem(hDlg, ID_START), FALSE);
 			EnableWindow(GetDlgItem(hDlg, ID_STOP), TRUE);
 
@@ -208,10 +214,11 @@ HRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 			MoveToEx(hdc, width / 8, 0, NULL);//縦軸
 			LineTo(hdc, width / 8, height);
+			//☆軸ラベルの背景を黒に設定する
 			TextOut(hdc, width / 2, height * 6 / 8, TEXT("Time[s]"), 7);
 			i++;
 		}
-
+		//☆軸ラベルの背景を黒に設定する
 		TextOut(hdc, width / 2, height * 6 / 8, TEXT("Time[s]"), 7);
 		//図形描画
 
@@ -228,13 +235,16 @@ HRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		static double old_position_y[2] = { height / 2,height / 2 };
 		static double old_position_x[2] = { width / 8,width / 8 };
 
+
+		//マルチスレッドでの処理なのでこれだとsin波と矩形波のタイミングがずれてしまうことがある
+		//同一のスレッド内で同じタイミングでデータを読み込んでそれぞれ描画するように
 		if (hWnd == name[0])
 		{
 			double tmp = 0;
 			ifs.seekg(pos[0]);
 			getline(ifs, str);
 
-
+			//☆Timerを参考に1secに読み込むデータ数から待機時間を計算して待機するように
 			sscanf(str.data(), "%lf %lf", &data1, &data2);
 			pos[0] = ifs.tellg();
 
@@ -264,6 +274,8 @@ HRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 				MoveToEx(hdc, width / 8, 0, NULL);
 				LineTo(hdc, width / 8, height);
+
+				//☆軸ラベルの背景を黒に設定するように
 				TextOut(hdc, width / 2, height * 6 / 8, TEXT("Time[s]"), 7);
 			}
 			else
@@ -311,6 +323,7 @@ HRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 				MoveToEx(hdc, width / 8, 0, NULL);
 				LineTo(hdc, width / 8, height);
+				//☆軸ラベルの背景を黒に設定するように
 				TextOut(hdc, width / 2, height * 6 / 8, TEXT("Time[s]"), 7);
 			}
 			else
@@ -352,7 +365,8 @@ UINT WINAPI TFunc(LPVOID thParam) {
 	for (int i = 0; i < 3000; i++)
 	{
 		InvalidateRect(FU->hwnd, NULL, TRUE);	//再描画
-		Sleep(1000 / 61.5);
+		//Sleep(1000 / 61.5);
+		Sleep(1000 / 1000);
 	}
 
 
